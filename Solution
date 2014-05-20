@@ -1,0 +1,96 @@
+package com.nick.playground;
+
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+//https://codility.com/programmers/challenges/
+
+// you can also use imports, for example:
+// import java.math.*;
+class Solution {
+
+    public static List<Edge>[]			nodeEdges		;
+	public static Map<Integer, Integer>[]	bestDistance	;
+
+	public static class Edge implements Comparable<Edge> {
+		public Edge(int attr, int adjacentNode) {
+			super();
+			this.attr = attr;
+			this.adjacentNode = adjacentNode;
+		}
+
+		public int	attr;
+		public int	adjacentNode;
+
+		@Override
+		public int compareTo(Edge o) {
+			return -1 * (attr < o.attr ? -1 : (attr == o.attr ? 0 : 1));
+		}
+	}
+  
+  
+	static int fillPaths(Edge incommingEdge) {
+		int currentDepthPossible = 0;
+		if (bestDistance[incommingEdge.adjacentNode]
+				.get(incommingEdge.attr) == null) {
+			for (Edge outgoingEdge : nodeEdges[incommingEdge.adjacentNode]) {
+				if (outgoingEdge.attr>incommingEdge.attr) {
+					int edgeScore = fillPaths(outgoingEdge);
+					if (edgeScore > currentDepthPossible) {
+						currentDepthPossible = edgeScore;
+					}
+				}
+			}
+			bestDistance[incommingEdge.adjacentNode].put(incommingEdge.attr, currentDepthPossible);
+		} else {
+			currentDepthPossible = bestDistance[incommingEdge.adjacentNode].get(incommingEdge.attr);
+		}
+		return currentDepthPossible+1;
+	}
+
+	  static class State {
+	        Edge incommingEdge;
+	        Edge outgoingEdge;          
+	        int edgeScore=0;                                                
+	        int currentDepthPossible=0;    
+	     };
+
+	public static int findLongestPath() {
+		int currentLongest = 0;
+		for (List<Edge> edges : nodeEdges) {
+			for (Edge e : edges) {
+				int edgeScore = fillPaths(e);
+				if (edgeScore > currentLongest) {
+					currentLongest = edgeScore;
+				}
+			}
+		}
+		return currentLongest;
+	}
+	public static void main(String[] args) {
+		int n = 10000;
+		int[] A = new int[10000];
+		int[] B = new int[10000];
+		int[] C = new int[10000];
+		for(int i =0;i<9999;i++){
+			A[i]=i;
+			B[i]=i+1;
+			C[i]=i;
+		}
+		System.out.println(new Solution().solution(n, A, B, C)); // 
+	}
+    public int solution(int N, int[] A, int[] B, int[] C) {
+        bestDistance = new Map[N];
+		nodeEdges = new List[N];
+		for (int i = 0; i < N; i++) {
+			bestDistance[i]= new HashMap<Integer, Integer>();
+			nodeEdges[i] = new LinkedList<Edge>();
+		}
+		for (int i = 0; i < A.length; i++) {
+			nodeEdges[A[i]].add(new Edge(C[i], B[i]));
+			nodeEdges[B[i]].add(new Edge(C[i], A[i]));
+		}
+		return findLongestPath();
+    }
+}
