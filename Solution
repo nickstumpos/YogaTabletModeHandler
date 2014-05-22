@@ -2,15 +2,14 @@ package com.nick.playground;
 
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
-//https://codility.com/programmers/challenges/
+import java.util.Queue;
+import java.util.TreeSet;
 
-// you can also use imports, for example:
-// import java.math.*;
+//https://codility.com/programmers/challenges/
 class Solution {
 
-    public static List<Edge>[]			nodeEdges		;
+    public static TreeSet<Edge>[]			nodeEdges		;
 	public static Map<Integer, Integer>[]	bestDistance	;
 
 	public static class Edge implements Comparable<Edge> {
@@ -25,42 +24,43 @@ class Solution {
 
 		@Override
 		public int compareTo(Edge o) {
-			return -1 * (attr < o.attr ? -1 : (attr == o.attr ? 0 : 1));
+			return attr < o.attr ? -1 : (attr == o.attr ? 0 : 1);
 		}
 	}
   
   
-	static int fillPaths(Edge incommingEdge) {
-		int currentDepthPossible = 0;
-		if (bestDistance[incommingEdge.adjacentNode]
-				.get(incommingEdge.attr) == null) {
-			for (Edge outgoingEdge : nodeEdges[incommingEdge.adjacentNode]) {
-				if (outgoingEdge.attr>incommingEdge.attr) {
-					int edgeScore = fillPaths(outgoingEdge);
-					if (edgeScore > currentDepthPossible) {
-						currentDepthPossible = edgeScore;
-					}
-				}
+	static int fillPaths(Edge incommingEdge, int i) {
+		int height = 0;
+
+	    if (incommingEdge == null) return height;
+
+	    final Queue<Edge> queue = new LinkedList<Edge>();
+	    queue.add(incommingEdge);
+
+	    int peerCount = 1;
+	    int childCount = 0;
+
+	    while (!queue.isEmpty()) {
+	    	Edge current = queue.poll();
+	        peerCount--;
+	        for (Edge outgoingEdge : nodeEdges[current.adjacentNode].tailSet(current,false)) {
+	        	queue.add(outgoingEdge); 
+	        	childCount++;
 			}
-			bestDistance[incommingEdge.adjacentNode].put(incommingEdge.attr, currentDepthPossible);
-		} else {
-			currentDepthPossible = bestDistance[incommingEdge.adjacentNode].get(incommingEdge.attr);
-		}
-		return currentDepthPossible+1;
+	        if (peerCount == 0) {
+	            height++;
+	            peerCount = childCount;
+	            childCount = 0;
+	        }
+	    }
+	    return height;
 	}
-
-	  static class State {
-	        Edge incommingEdge;
-	        Edge outgoingEdge;          
-	        int edgeScore=0;                                                
-	        int currentDepthPossible=0;    
-	     };
-
+	
 	public static int findLongestPath() {
 		int currentLongest = 0;
-		for (List<Edge> edges : nodeEdges) {
-			for (Edge e : edges) {
-				int edgeScore = fillPaths(e);
+		for (int i = 0; i< nodeEdges.length;i++) {		
+			for (Edge e : nodeEdges[i]) {
+				int edgeScore = fillPaths(e,i);
 				if (edgeScore > currentLongest) {
 					currentLongest = edgeScore;
 				}
@@ -68,24 +68,13 @@ class Solution {
 		}
 		return currentLongest;
 	}
-	public static void main(String[] args) {
-		int n = 10000;
-		int[] A = new int[10000];
-		int[] B = new int[10000];
-		int[] C = new int[10000];
-		for(int i =0;i<9999;i++){
-			A[i]=i;
-			B[i]=i+1;
-			C[i]=i;
-		}
-		System.out.println(new Solution().solution(n, A, B, C)); // 
-	}
+
     public int solution(int N, int[] A, int[] B, int[] C) {
         bestDistance = new Map[N];
-		nodeEdges = new List[N];
+		nodeEdges = new TreeSet[N];
 		for (int i = 0; i < N; i++) {
 			bestDistance[i]= new HashMap<Integer, Integer>();
-			nodeEdges[i] = new LinkedList<Edge>();
+			nodeEdges[i] = new TreeSet<Edge>();
 		}
 		for (int i = 0; i < A.length; i++) {
 			nodeEdges[A[i]].add(new Edge(C[i], B[i]));
